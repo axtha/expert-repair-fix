@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasherFix - Direct Machine Repair Service</title>
+    <link rel="icon" type="image/png" href="https://img.freepik.com/premium-vector/repair-logo-design-vector-illustration_59362-519.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root {
+            --primary: #4673d5;
+            --secondary: #96bbf6;
+            --accent: #f59e0b;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #map {
+    position: relative;
+    z-index: 1; /* keep map behind header */
+}
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            color: var(--accent);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #f97316;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .btn-outline:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: url('https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .hero-content {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .call-now-btn {
+            display: inline-flex;
+            align-items: center;
+            background: var(--success);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 1rem;
+            transition: all 0.3s;
+        }
+        
+        .call-now-btn i {
+            margin-right: 10px;
+        }
+        
+        .call-now-btn:hover {
+            background: #0da271;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Services Section */
+        .services {
+            padding: 5rem 0;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .section-title p {
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .service-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            padding: 2rem;
+            border: 1px solid #eaeaea;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .service-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .service-card h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        /* Booking Section */
+        .booking {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+        
+        .booking-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .booking-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .booking-content ul {
+            list-style: none;
+            margin: 2rem 0;
+        }
+        
+        .booking-content li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .booking-content i {
+            margin-right: 10px;
+            color: var(--accent);
+        }
+        
+        .booking-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .booking-form h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        /* Location Section */
+        .location {
+            padding: 5rem 0;
+            background: #f8f9fa;
+        }
+        
+        .location-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .map-container {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .location-info {
+            padding: 2rem;
+        }
+        
+        .location-info h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .location-info p {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .location-info i {
+            margin-right: 10px;
+            color: var(--primary);
+            width: 20px;
+        }
+        
+        
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0 1rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-section p, .footer-section li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+        
+        .social-icons a {
+            display: inline-block;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .contact-methods {
+            margin-top: 1rem;
+        }
+        
+        .contact-methods a {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .contact-methods a i {
+            margin-right: 5px;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .booking-container, .location-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .services-grid, .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .call-now-btn {
+                margin: 0.5rem 0;
+                display: flex;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fas fa-washing-machine"></i>
+                    <span>WasherFix Pro</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#booking">Book Now</a></li>
+                    <li><a href="#location">Location</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <a href="tel:+91 9372495452" class="btn">
+                    <i class="fas fa-phone"></i> Call Now
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Expert Washing Machine, Refrigerator, Microwave , Ac and Water filter Repair Services</h1>
+                <p>Fast, reliable, and professional repair services at your doorstep. Book directly and save!</p>
+                <div>
+                    <a href="#booking" class="btn">Schedule a Repair</a>
+                    <a href="tel:+91 9372495452" class="call-now-btn">
+                        <i class="fas fa-phone"></i> Call Now: +91 9372495452
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Services</h2>
+                <p>We provide comprehensive washing machine repair services for all major brands and models.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3>Diagnosis & Repair</h3>
+                    <p>Professional diagnosis and efficient repair of all machine issues.</p>
+                    <a href="tel:+91 9372495452" class="btn">Call for Service</a>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3>Part Replacement</h3>
+                    <p>Genuine replacement parts for all brands with warranty included.</p>
+                    <a href="tel:+91 9372495452" class="btn">Call for Parts</a>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-shower"></i>
+                    </div>
+                    <h3>Maintenance Services</h3>
+                    <p>Regular maintenance to keep your washing machine running smoothly.</p>
+                    <a href="tel:+91 9372495452" class="btn">Schedule Maintenance</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Section -->
+    <section class="booking" id="booking">
+        <div class="container">
+            <div class="booking-container">
+                <div class="booking-content">
+                    <h2>Book Directly</h2>
+                    <p>Skip the middleman and book your repair service directly with our expert technician.</p>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Same-day service available</li>
+                        <li><i class="fas fa-check-circle"></i> No hidden fees</li>
+                        <li><i class="fas fa-check-circle"></i> 90-day warranty on all repairs</li>
+                        <li><i class="fas fa-check-circle"></i> Certified professional</li>
+                    </ul>
+                    <div class="contact-methods">
+                        <a href="tel:+91 9372495452" class="call-now-btn">
+                            <i class="fas fa-phone"></i> Call Now
+                        </a>
+                        <a href="https://wa.me/9372495452" target="_blank" class="btn-outline">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+                <div class="booking-form">
+                    <h3>Schedule Your Repair</h3>
+                    <form id="repairForm">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" required placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" required placeholder="Your Email">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" required placeholder="Your Phone Number">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" required placeholder="Your Address">
+                        </div>
+                        <div class="form-group">
+                            <label for="machine-type">Machine Type</label>
+                            <select id="machine-type" required>
+                                <option value="">Select Machine Type</option>
+                                <option value="top-load">Top Load Washer</option>
+                                <option value="front-load">Front Load Washer</option>
+                                <option value="combo">Washer/Dryer Combo</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="issue">Describe the Issue</label>
+                            <textarea id="issue" rows="3" required placeholder="What's wrong with your washing machine?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Preferred Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Preferred Time</label>
+                            <select id="time" required>
+                                <option value="">Select Time Slot</option>
+                                <option value="morning">Morning (9 AM - 12 PM)</option>
+                                <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                                <option value="evening">Evening (4 PM - 7 PM)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Book Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location Section -->
+    <section class="location" id="location">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Location & Service Area</h2>
+                <p>We serve the entire metropolitan area with quick response times.</p>
+            </div>
+            <div class="location-container">
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+                <div class="location-info">
+                    <h3>Service Areas</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Repair Street, Fixit City, FC 12345</p>
+                    <p><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</p>
+                    <p><i class="fas fa-phone"></i> <a href="tel:+91 9372495452">9372495452</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:roshangupta8830@gmail.com">roshangupta8830@gmail.com</a></p>
+                    
+                    <h3 style="margin-top: 2rem;">Direct Contact Methods</h3>
+                    <div class="contact-methods">
+                        <a href="tel:+91 9372495452" class="btn">
+                            <i class="fas fa-phone"></i> Call Now
+                        </a>
+                        <a href="sms:+91 9372495452" class="btn-outline">
+                            <i class="fas fa-sms"></i> Text Message
+                        </a>
+                        <a href="https://wa.me/+91 9372495452" target="_blank" class="btn-outline">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                    
+                    <h3 style="margin-top: 2rem;">Service Coverage</h3>
+                    <p>We provide service to the following areas:</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Downtown area</li>
+                        <li><i class="fas fa-check"></i> Suburbs within 25 miles</li>
+                        <li><i class="fas fa-check"></i> Emergency service available</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>WasherFix Pro</h3>
+                    <p>Professional repair services with a satisfaction guarantee.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-phone"></i> <a href="tel:+91 9372495452">9372495452</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:roshangupta8830@gmail.com">roshangupta8830@gmail.com</a></p>
+                    <p><i class="fas fa-map-marker-alt"></i> Tagor Nagar group no 3 vikharoli east 400083</p>
+                    
+                    <div class="contact-methods">
+                        <a href="tel:+91 9372495452"><i class="fas fa-phone"></i> Call</a>
+                        <a href="sms:+91 9372495452"><i class="fas fa-sms"></i> Text</a>
+                        <a href="https://wa.me/9372495452" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#booking">Book Now</a></li>
+                        <li><a href="#location">Location</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/share/17RYVR5WBh/"><i class="fab fa-facebook"></i></a>
+                        <a href="http://www.youtube.com/@RoshanGupta-dy4ty"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.instagram.com/roshangupta8850?utm_source=ig_web_button_share_sheet&igsh=ZGw0dWN5ajlucWp1"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 WasherFix Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        function initMap() {
+            // Default coordinates (New York City)
+            const defaultCoords = [19.111687, 72.928061];
+            
+            
+            // Create map
+            const map = L.map('map', {
+    center: defaultCoords,
+    zoom: 13,
+    dragging: false,      // Disable dragging
+    zoomControl: false,   // Hide zoom buttons
+    scrollWheelZoom: false, // Disable scroll zoom
+    doubleClickZoom: false, // Disable double click zoom
+    boxZoom: false,       // Disable box zoom
+    keyboard: false,      // Disable keyboard nav
+    touchZoom: false      // Disable touch zoom
+});
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add marker
+            L.marker(defaultCoords)
+                .addTo(map)
+                .bindPopup('WasherFix Pro<br>Service Center')
+                .openPopup();
+            
+            // Add service area circle
+            L.circle(defaultCoords, {
+                color: '#2563eb',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.2,
+                radius: 5000
+            }).addTo(map).bindPopup('Our Service Area');
+        }
+        
+        // Initialize map when page loads
+        window.onload = initMap;
+        
+        // Form submission
+        document.getElementById('repairForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const machineType = document.getElementById('machine-type').value;
+            const issue = document.getElementById('issue').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            
+            // Show confirmation
+            alert(`Thank you ${name}! Your repair request has been received. We will contact you at ${phone} shortly to confirm your appointment.`);
+            
+            // In a real application, you would send this data to a server
+            console.log('Booking details:', {name, email, phone, address, machineType, issue, date, time});
+            
+            // Reset the form
+            document.getElementById('repairForm').reset();
+        });
+        
+        // Initialize date input with tomorrow's date as minimum
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('date').min = tomorrow.toISOString().split('T')[0];
+        
+        // Click to call functionality
+        document.querySelectorAll('a[href^="tel:"]').forEach(link => {
+            link.addEventListener('click', function() {
+                // In a real application, you might want to track this event
+                console.log('Customer initiated call from: ' + link.getAttribute('href'));
+            });
+        });
+    </script>
+</body>
+</html>
